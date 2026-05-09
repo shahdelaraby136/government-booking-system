@@ -67,9 +67,20 @@ function Breadcrumb({ pathname }) {
     { key: "breadcrumb.services", match: "/" },
     { key: "breadcrumb.branches", match: "/branches" },
     { key: "breadcrumb.slots", match: "/slots" },
+    { key: "breadcrumb.confirm", match: "/confirm" },
+    { key: "breadcrumb.success", match: "/success" },
   ];
 
-  const currentIndex = steps.findIndex((s) => pathname.startsWith(s.match));
+  // Match longest prefix so "/" doesn't always win
+  let currentIndex = -1;
+  let bestLen = -1;
+  steps.forEach((s, i) => {
+    const isMatch = s.match === "/" ? pathname === "/" : pathname.startsWith(s.match);
+    if (isMatch && s.match.length > bestLen) {
+      bestLen = s.match.length;
+      currentIndex = i;
+    }
+  });
 
   return (
     <div className="flex items-center gap-2 text-xs text-slate-500 overflow-x-auto">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Clock, Calendar, ArrowLeft, ArrowRight, Check, CheckCircle } from "lucide-react";
+import { Clock, Calendar, ArrowRight, ArrowLeft, Check, CheckCircle } from "lucide-react";
 import { getSlots } from "../lib/api";
 import { useTranslation } from "../lib/i18n";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -8,8 +8,8 @@ import ErrorMessage from "../components/ErrorMessage";
 
 export default function SlotsPage() {
   const router = useRouter();
-  const { t, lang, dateLocale } = useTranslation();
-  const { branchId, branchName, branchCity } = router.query;
+  const { t, dateLocale } = useTranslation();
+  const { serviceId, serviceName, branchId, branchName, branchCity } = router.query;
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,7 +50,6 @@ export default function SlotsPage() {
     grouped[dateKey].push(slot);
   });
 
-  const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
   const selectedDate = selectedSlot
     ? new Date(selectedSlot.date).toLocaleDateString(dateLocale, {
         weekday: "long",
@@ -60,6 +59,24 @@ export default function SlotsPage() {
       })
     : "";
 
+  const handleContinue = () => {
+    if (!selectedSlot) return;
+    router.push({
+      pathname: "/confirm",
+      query: {
+        serviceId,
+        serviceName,
+        branchId,
+        branchName,
+        branchCity,
+        slotId: selectedSlot._id,
+        slotDate: selectedSlot.date,
+        slotStart: selectedSlot.startTime,
+        slotEnd: selectedSlot.endTime,
+      },
+    });
+  };
+
   return (
     <div>
       {/* Back + header */}
@@ -67,7 +84,7 @@ export default function SlotsPage() {
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-navy-500 hover:text-gold-600 mb-4 transition"
       >
-        <BackArrow className="h-4 w-4" strokeWidth={1.75} /> {t("slots.back")}
+        <ArrowRight className="h-4 w-4" strokeWidth={1.75} /> {t("slots.back")}
       </button>
 
       <div className="mb-6">
@@ -117,34 +134,46 @@ export default function SlotsPage() {
         </div>
       ))}
 
-      {/* Selection summary */}
+      {/* Selection summary + continue */}
       {selectedSlot && (
-        <div className="card-standard mt-8 bg-navy-50 border border-gold-200 flex items-start gap-4">
-          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-            <CheckCircle className="h-6 w-6 text-green-600" strokeWidth={1.75} />
-          </div>
-          <div className="flex-1">
-            <h4 className="font-semibold text-navy-600 mb-2">{t("slots.selected")}</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-slate-500">{t("slots.branch")}:</span>{" "}
-                <span className="font-medium text-navy-600">{branchName}</span>
-              </div>
-              <div>
-                <span className="text-slate-500">{t("slots.city")}:</span>{" "}
-                <span className="font-medium text-navy-600">{branchCity}</span>
-              </div>
-              <div>
-                <span className="text-slate-500">{t("slots.date")}:</span>{" "}
-                <span className="font-medium text-navy-600">{selectedDate}</span>
-              </div>
-              <div>
-                <span className="text-slate-500">{t("slots.time")}:</span>{" "}
-                <span className="font-medium text-navy-600" dir="ltr">
-                  {selectedSlot.startTime} - {selectedSlot.endTime}
-                </span>
+        <div className="card-standard mt-8 bg-navy-50 border border-gold-200">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+              <CheckCircle className="h-6 w-6 text-green-600" strokeWidth={1.75} />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-navy-600 mb-2">{t("slots.selected")}</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-slate-500">{t("slots.branch")}:</span>{" "}
+                  <span className="font-medium text-navy-600">{branchName}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">{t("slots.city")}:</span>{" "}
+                  <span className="font-medium text-navy-600">{branchCity}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">{t("slots.date")}:</span>{" "}
+                  <span className="font-medium text-navy-600">{selectedDate}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">{t("slots.time")}:</span>{" "}
+                  <span className="font-medium text-navy-600" dir="ltr">
+                    {selectedSlot.startTime} - {selectedSlot.endTime}
+                  </span>
+                </div>
               </div>
             </div>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleContinue}
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              {t("slots.continue")}
+              <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
+            </button>
           </div>
         </div>
       )}

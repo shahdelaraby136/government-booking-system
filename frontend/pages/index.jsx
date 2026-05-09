@@ -8,7 +8,6 @@ import {
   CreditCard,
   Receipt,
   ArrowLeft,
-  ArrowRight,
 } from "lucide-react";
 import { getServices } from "../lib/api";
 import { useTranslation } from "../lib/i18n";
@@ -27,7 +26,7 @@ const ICON_MAP = {
 
 export default function ServicesPage() {
   const router = useRouter();
-  const { t, lang, localized } = useTranslation();
+  const { t } = useTranslation();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,22 +46,20 @@ export default function ServicesPage() {
 
   useEffect(() => {
     fetchServices();
-  }, [lang]);
+  }, []);
 
   const handleSelect = (service) => {
     router.push({
       pathname: "/branches",
       query: {
         serviceId: service._id,
-        serviceName: localized(service, "name"),
+        serviceName: service.name,
       },
     });
   };
 
   if (loading) return <LoadingSpinner message={t("services.loading")} />;
   if (error) return <ErrorMessage message={error} onRetry={fetchServices} />;
-
-  const ForwardArrow = lang === "ar" ? ArrowLeft : ArrowRight;
 
   return (
     <div>
@@ -92,16 +89,16 @@ export default function ServicesPage() {
                     strokeWidth={1.75}
                   />
                 </div>
-                <ForwardArrow
+                <ArrowLeft
                   className="h-5 w-5 text-slate-300 group-hover:text-gold-500 transition-all"
                   strokeWidth={1.75}
                 />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-navy-500 group-hover:text-gold-600 transition-colors">
-                {localized(service, "name")}
+                {service.name}
               </h3>
               <p className="mt-1 text-sm text-slate-500 leading-relaxed">
-                {localized(service, "description")}
+                {service.description}
               </p>
             </button>
           );

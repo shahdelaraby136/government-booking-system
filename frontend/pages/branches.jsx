@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { MapPin, ArrowLeft, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, ArrowLeft } from "lucide-react";
 import { getBranches } from "../lib/api";
 import { useTranslation } from "../lib/i18n";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -8,7 +8,7 @@ import ErrorMessage from "../components/ErrorMessage";
 
 export default function BranchesPage() {
   const router = useRouter();
-  const { t, lang, localized } = useTranslation();
+  const { t } = useTranslation();
   const { serviceId, serviceName } = router.query;
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ export default function BranchesPage() {
 
   useEffect(() => {
     if (serviceId) fetchBranches();
-  }, [serviceId, lang]);
+  }, [serviceId]);
 
   const handleSelect = (branch) => {
     router.push({
@@ -39,8 +39,8 @@ export default function BranchesPage() {
         serviceId,
         serviceName,
         branchId: branch._id,
-        branchName: localized(branch, "name"),
-        branchCity: localized(branch, "city"),
+        branchName: branch.name,
+        branchCity: branch.city,
       },
     });
   };
@@ -49,9 +49,6 @@ export default function BranchesPage() {
   if (loading) return <LoadingSpinner message={t("branches.loading")} />;
   if (error) return <ErrorMessage message={error} onRetry={fetchBranches} />;
 
-  const BackArrow = lang === "ar" ? ArrowRight : ArrowLeft;
-  const ForwardArrow = lang === "ar" ? ArrowLeft : ArrowRight;
-
   return (
     <div>
       {/* Back + header */}
@@ -59,7 +56,7 @@ export default function BranchesPage() {
         onClick={() => router.push("/")}
         className="flex items-center gap-2 text-sm text-navy-500 hover:text-gold-600 mb-4 transition"
       >
-        <BackArrow className="h-4 w-4" strokeWidth={1.75} /> {t("branches.back")}
+        <ArrowRight className="h-4 w-4" strokeWidth={1.75} /> {t("branches.back")}
       </button>
 
       <div className="mb-8">
@@ -84,17 +81,17 @@ export default function BranchesPage() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-navy-500 group-hover:text-gold-600 transition-colors">
-                  {localized(branch, "name")}
+                  {branch.name}
                 </h3>
                 <div className="flex items-center gap-1.5 mt-2 text-sm text-slate-500">
                   <MapPin className="h-4 w-4 text-navy-400 shrink-0" strokeWidth={1.75} />
-                  <span className="truncate">{localized(branch, "address")}</span>
+                  <span className="truncate">{branch.address}</span>
                 </div>
                 <span className="inline-block mt-3 px-2.5 py-0.5 bg-gold-50 text-gold-700 text-xs rounded-full font-medium border border-gold-200">
-                  {localized(branch, "city")}
+                  {branch.city}
                 </span>
               </div>
-              <ForwardArrow
+              <ArrowLeft
                 className="h-5 w-5 text-slate-300 group-hover:text-gold-500 transition-all mt-1 shrink-0"
                 strokeWidth={1.75}
               />

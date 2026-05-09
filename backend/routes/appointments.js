@@ -4,6 +4,7 @@ const { body, validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 const Appointment = require("../models/Appointment");
 const Slot = require("../models/Slot");
+const { sendBookingConfirmation } = require("../services/mailer");
 
 // POST /api/appointments - Create a new booking
 router.post(
@@ -108,6 +109,11 @@ router.post(
         .populate("serviceId", "name")
         .populate("branchId", "name address city")
         .populate("slotId", "date startTime endTime");
+
+      // Fire-and-forget email — never block or fail the booking on mail errors
+      sendBookingConfirmation(populatedAppointment).catch((e) =>
+        console.error("[mailer] uncaught:", e.message)
+      );
 
       res.status(201).json({
         success: true,
