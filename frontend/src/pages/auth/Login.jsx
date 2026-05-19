@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { loginRequest } from "../../lib/api.js";
 import { saveCitizenSession, getCitizenSession } from "../../lib/citizenAuth.js";
 import { saveEmployeeSession, getEmployeeSession } from "../../lib/employeeAuth.js";
+import { saveAdminSession, getAdminSession } from "../../lib/adminAuth.js";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function Login() {
   useEffect(() => {
     if (getCitizenSession()?.nationalId) navigate("/citizen/dashboard", { replace: true });
     else if (getEmployeeSession()?._id) navigate("/employee/dashboard", { replace: true });
+    else if (getAdminSession()?._id) navigate("/admin/dashboard", { replace: true });
   }, [navigate]);
 
   function handleChange(e) {
@@ -29,7 +31,16 @@ export default function Login() {
       const user = await loginRequest(loginChoise);
       toast.success("تم تسجيل الدخول بنجاح");
 
-      if (user.role === "employee" || user.role === "manager" || user.role === "admin") {
+      if (user.role === "admin") {
+        saveAdminSession({
+          _id: user._id,
+          name: `${user.firstName} ${user.lastName}`.trim(),
+          email: user.email,
+          nationalId: user.nationalId,
+          role: user.role,
+        });
+        navigate("/admin/dashboard", { replace: true });
+      } else if (user.role === "employee" || user.role === "manager") {
         if (!user.branch) {
           toast.error("الموظف غير مسجل في النظام. تواصل مع الإدارة.");
           return;

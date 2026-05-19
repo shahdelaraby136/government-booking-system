@@ -5,7 +5,6 @@ import { registerRequest } from "../../lib/api.js";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [citizen, setCitizen] = useState(true);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -15,6 +14,12 @@ export default function Register() {
     nationalId: "",
     role: "citizen",
   });
+
+  const ROLES = [
+    { key: "citizen", label: "مواطن" },
+    { key: "employee", label: "موظف" },
+    { key: "admin", label: "مسؤول" },
+  ];
 
   async function register(e) {
     e.preventDefault();
@@ -48,31 +53,18 @@ export default function Register() {
         <form onSubmit={register} className="flex flex-col gap-4">
           {/* Role Switch */}
           <div className="flex bg-slate-100 p-1 rounded-xl">
-            <button
-              type="button"
-              onClick={() => {
-                setForm({ ...form, role: "citizen" });
-                setCitizen(true);
-              }}
-              className={`flex-1 py-2 rounded-lg font-semibold transition ${
-                citizen ? "bg-white text-[#002B5B] shadow" : "text-slate-500"
-              }`}
-            >
-              مواطن
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setForm({ ...form, role: "employee" });
-                setCitizen(false);
-              }}
-              className={`flex-1 py-2 rounded-lg font-semibold transition ${
-                !citizen ? "bg-white text-[#002B5B] shadow" : "text-slate-500"
-              }`}
-            >
-              موظف
-            </button>
+            {ROLES.map((r) => (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => setForm({ ...form, role: r.key })}
+                className={`flex-1 py-2 rounded-lg font-semibold transition ${
+                  form.role === r.key ? "bg-white text-[#002B5B] shadow" : "text-slate-500"
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
           </div>
 
           {/* Names */}

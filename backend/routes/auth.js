@@ -35,7 +35,7 @@ router.post(
     body("email").trim().isEmail().withMessage("بريد إلكتروني غير صحيح").toLowerCase(),
     body("password").isLength({ min: 6 }).withMessage("كلمة المرور 6 أحرف على الأقل"),
     body("nationalId").matches(/^\d{14}$/).withMessage("الرقم القومي 14 رقم"),
-    body("role").optional().isIn(["citizen", "employee"]).withMessage("الدور غير صالح"),
+    body("role").optional().isIn(["citizen", "employee", "admin"]).withMessage("الدور غير صالح"),
   ],
   async (req, res) => {
     if (!validate(req, res)) return;

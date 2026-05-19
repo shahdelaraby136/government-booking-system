@@ -10,7 +10,9 @@ import {
   UserCog,
   Menu,
   ShieldCheck,
+  LogOut,
 } from "lucide-react";
+import { useAdminSession } from "../lib/adminAuth.js";
 
 const NAV_ITEMS = [
   { to: "/admin/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
@@ -25,6 +27,7 @@ const NAV_ITEMS = [
 export default function AdminLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { session: admin, logout } = useAdminSession();
 
   useEffect(() => {
     setMobileOpen(false);
@@ -70,13 +73,20 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-navy-400/30">
+        <div className="p-4 border-t border-navy-400/30 space-y-1">
           <Link
             to="/"
             className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm text-white/70 hover:bg-white/10 hover:text-white transition"
           >
             العودة للموقع
           </Link>
+          <button
+            onClick={logout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm text-white/70 hover:bg-red-500/20 hover:text-red-200 transition"
+          >
+            <LogOut className="h-4 w-4" strokeWidth={1.75} />
+            <span>تسجيل الخروج</span>
+          </button>
         </div>
       </aside>
 
@@ -102,7 +112,9 @@ export default function AdminLayout() {
               <span className="inline-block px-3 py-1 rounded-full bg-gold-50 text-gold-700 text-xs font-semibold border border-gold-200">
                 مسؤول
               </span>
-              <span className="text-slate-600 font-medium">حساب الإدارة</span>
+              <span className="text-slate-600 font-medium">
+                {admin?.name || "حساب الإدارة"}
+              </span>
             </div>
           </div>
         </header>
