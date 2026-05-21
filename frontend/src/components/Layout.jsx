@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Building2, UserCircle, ScanLine } from "lucide-react";
+import { UserCircle, ScanLine } from "lucide-react";
 import { useTranslation } from "../lib/i18n.js";
 
 export default function Layout() {
@@ -13,8 +13,8 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition">
-              <div className="w-10 h-10 rounded-lg bg-gold-500 flex items-center justify-center shadow-gov">
-                <Building2 className="h-6 w-6 text-navy-500" strokeWidth={1.75} />
+              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-gov p-1">
+                <img src="/egypt-emblem.jpeg" alt="شعار الجمهورية" className="w-full h-full object-contain" />
               </div>
               <div>
                 <h1 className="text-lg font-bold leading-tight">{t("app.title")}</h1>
