@@ -251,7 +251,6 @@ router.delete("/branches/:id", async (req, res) => {
 const roles = [
   { id: "r1", name: "citizen", label: "مواطن" },
   { id: "r2", name: "employee", label: "موظف" },
-  { id: "r3", name: "manager", label: "مدير" },
   { id: "r4", name: "admin", label: "مسؤول النظام" },
 ];
 

@@ -359,7 +359,7 @@ function renderCells(tab, it) {
 
 function roleLabel(role) {
   return (
-    { citizen: "مواطن", employee: "موظف", admin: "مسؤول", manager: "مدير" }[role] || role
+    { citizen: "مواطن", employee: "موظف", admin: "مسؤول" }[role] || role
   );
 }
 
