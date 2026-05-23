@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, RefreshCw } from "lucide-react";
+import { BarChart3, Download, RefreshCw } from "lucide-react";
+import { toast } from "react-toastify";
+import * as XLSX from "xlsx";
 import LoadingSpinner from "../../components/LoadingSpinner.jsx";
 import ErrorMessage from "../../components/ErrorMessage.jsx";
-import { getAdminReports } from "../../lib/api.js";
+import { getAdminAppointments, getAdminReports } from "../../lib/api.js";
+
+const STATUS_AR = {
+  confirmed: "في الانتظار",
+  verified: "تم التحقق",
+  completed: "منجز",
+  cancelled: "ملغي",
+};
 
 const RANGES = [
   { value: 7, label: "آخر 7 أيام" },
@@ -15,6 +24,7 @@ export default function AdminReports() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   const load = async () => {
     try {
@@ -50,6 +60,113 @@ export default function AdminReports() {
 
   const maxValue = Math.max(1, ...(report?.series || []).map((b) => b.total));
 
+  const exportToExcel = async () => {
+    try {
+      setExporting(true);
+      const result = await getAdminAppointments({ limit: 500 });
+      const appointments = result?.data || [];
+
+      const summaryRows = [
+        ["الفترة", `آخر ${days} يوماً`],
+        ["تاريخ التصدير", new Date().toLocaleString("ar-EG")],
+        [],
+        ["البند", "العدد"],
+        ["إجمالي الحجوزات", totals.total],
+        ["في الانتظار", totals.confirmed],
+        ["تم التحقق", totals.verified],
+        ["منجز", totals.completed],
+        ["ملغي", totals.cancelled],
+      ];
+      const summarySheet = XLSX.utils.aoa_to_sheet(summaryRows);
+      summarySheet["!cols"] = [{ wch: 28 }, { wch: 22 }];
+      summarySheet["!views"] = [{ RTL: true }];
+
+      const dailyHeader = ["التاريخ", "الإجمالي", "في الانتظار", "تم التحقق", "منجز", "ملغي"];
+      const dailyData = [
+        dailyHeader,
+        ...(report?.series || []).map((b) => [
+          b.date,
+          b.total,
+          b.confirmed,
+          b.verified,
+          b.completed,
+          b.cancelled,
+        ]),
+      ];
+      const dailySheet = XLSX.utils.aoa_to_sheet(dailyData);
+      dailySheet["!cols"] = [
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 12 },
+      ];
+      dailySheet["!views"] = [{ RTL: true }];
+
+      const apptHeader = [
+        "رقم الحجز",
+        "اسم المواطن",
+        "الرقم القومي",
+        "الهاتف",
+        "الخدمة",
+        "الفرع",
+        "المدينة",
+        "التاريخ",
+        "وقت البدء",
+        "وقت الانتهاء",
+        "الحالة",
+        "تاريخ الإنشاء",
+      ];
+      const apptData = [
+        apptHeader,
+        ...appointments.map((a) => [
+          a.bookingReference || "",
+          a.citizenName || "",
+          a.nationalId || "",
+          a.phone || "",
+          a.serviceId?.name || "",
+          a.branchId?.name || "",
+          a.branchId?.city || "",
+          formatDateOnly(a.slotId?.date),
+          a.slotId?.startTime || "",
+          a.slotId?.endTime || "",
+          STATUS_AR[a.status] || a.status || "",
+          a.createdAt ? new Date(a.createdAt).toLocaleString("ar-EG") : "",
+        ]),
+      ];
+      const apptSheet = XLSX.utils.aoa_to_sheet(apptData);
+      apptSheet["!cols"] = [
+        { wch: 16 },
+        { wch: 22 },
+        { wch: 18 },
+        { wch: 14 },
+        { wch: 22 },
+        { wch: 22 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 22 },
+      ];
+      apptSheet["!views"] = [{ RTL: true }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, summarySheet, "الملخص");
+      XLSX.utils.book_append_sheet(wb, dailySheet, "الحجوزات اليومية");
+      XLSX.utils.book_append_sheet(wb, apptSheet, "كل الحجوزات");
+
+      const stamp = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `تقرير-الحجوزات-${stamp}.xlsx`);
+      toast.success("تم تنزيل التقرير");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "تعذر تصدير التقرير");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
@@ -78,6 +195,14 @@ export default function AdminReports() {
           <button onClick={load} className="btn-secondary inline-flex items-center gap-2">
             <RefreshCw className="h-4 w-4" strokeWidth={1.75} />
             تحديث
+          </button>
+          <button
+            onClick={exportToExcel}
+            disabled={exporting || loading || !!error}
+            className="btn-primary inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="h-4 w-4" strokeWidth={1.75} />
+            {exporting ? "جاري التصدير..." : "تصدير Excel"}
           </button>
         </div>
       </div>
@@ -127,6 +252,16 @@ export default function AdminReports() {
       )}
     </div>
   );
+}
+
+function formatDateOnly(d) {
+  if (!d) return "";
+  const date = new Date(d);
+  if (Number.isNaN(date.getTime())) return "";
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function TotalCard({ label, value, color }) {
